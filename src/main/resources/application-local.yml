@@ -1,0 +1,24 @@
+spring:
+  config:
+    activate:
+      on-profile: local
+
+  datasource:
+    url: ${DATASOURCE_URL_LOCAL}
+    username: ${DATASOURCE_USERNAME}
+    password: ${DATASOURCE_PASSWORD}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  jpa:
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.MySQLDialect
+    hibernate:
+      ddl-auto: update
+
+jwt:
+  secret: ${JWT_SECRET_KEY}
+  access-expire: ${JWT_ACCESS_EXPIRE}
+  refresh-expire: ${JWT_REFRESH_EXPIRE}
