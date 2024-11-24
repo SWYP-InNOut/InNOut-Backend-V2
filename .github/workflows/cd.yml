@@ -48,7 +48,7 @@ jobs:
           port: ${{ secrets.WAS_PORT }}
           key: ${{ secrets.WAS_KEY }}
           script: |
-            echo "${{ secrets.ENV_VARS }}" > /InNOut-Backend/.env
+            echo "${{ secrets.ENV_VARS }}" > /var/www/InNOut-Backend/.env
 
       - name: SSH into EC2 and deploy
         uses: appleboy/ssh-action@master
@@ -58,6 +58,7 @@ jobs:
           port: ${{ secrets.WAS_PORT }}
           key: ${{ secrets.WAS_KEY }}
           script: |
+            cd /var/www
             sudo docker ps
             sudo docker rm -f $(sudo docker ps -qa)
             sudo docker pull ${{ secrets.DOCKER_HUB_USERNAME }}/${{ secrets.DOCKER_HUB_REPO_NAME }}:latest
