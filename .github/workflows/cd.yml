@@ -1,9 +1,11 @@
 name: Build, Push Docker Image and Deploy to EC2 for Merge
 
 on:
+  push:
+    branches: [ "dev" ]
   pull_request:
     types: [ "closed" ]
-    branches: [ "develop", "main" ]
+    branches: [ "dev" ]
 
 jobs:
   build:
