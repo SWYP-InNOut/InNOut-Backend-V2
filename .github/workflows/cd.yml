@@ -40,6 +40,15 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
+      - name: Copy Docker Compose file to EC2
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_KEY }}
+          source: "docker-compose.yml"
+          target: "/home/ubuntu/"
+
       - name: SSH into EC2 and deploy
         uses: appleboy/ssh-action@master
         with:
@@ -50,21 +59,14 @@ jobs:
           script: |
             cd /home/ubuntu/
             
-            sudo chown ubuntu:ubuntu .env
-            sudo chown ubuntu:ubuntu docker-compose.yml
-            
-            sudo chmod 644 .env docker-compose.yml
+            sudo chown ubuntu:ubuntu .env docker-compose.yml || true
+            sudo chmod 644 .env docker-compose.yml || true
             
             sudo touch .env
-            sudo echo "${{ secrets.ENV_VARS }}" > .env
-            
-            sudo touch docker-compose.yml
-            sudo echo "docker-compose.yml" | > docker-compose.yml
+            echo "${{ secrets.ENV_VARS }}" | sudo tee .env > /dev/null
             
             sudo docker ps
             sudo docker rm -f $(sudo docker ps -qa)
             sudo docker pull ${{ secrets.DOCKER_HUB_USERNAME }}/${{ secrets.DOCKER_HUB_REPO_NAME }}:latest
             sudo docker-compose -f docker-compose.yml --env-file ./.env up -d
             sudo docker image prune -f
-
-
