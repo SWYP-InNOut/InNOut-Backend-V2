@@ -51,16 +51,15 @@ jobs:
             cd /home/ubuntu/
             
             sudo chown ubuntu:ubuntu .env
-            sudo chmod 644 .env
-            
             sudo chown ubuntu:ubuntu docker-compose.yml
-            sudo chmod 644 docker-compose.yml
+            
+            sudo chmod 644 .env docker-compose.yml
             
             sudo touch .env
-            sudo echo "${{ secrets.ENV_VARS }}" | sudo tee .env > .env
+            sudo echo "${{ secrets.ENV_VARS }}" > .env
             
             sudo touch docker-compose.yml
-            sudo echo docker-compose.yml | sudo tee docker-compose.yml > docker-compose.yml
+            sudo echo "docker-compose.yml" | > docker-compose.yml
             
             sudo docker ps
             sudo docker rm -f $(sudo docker ps -qa)
