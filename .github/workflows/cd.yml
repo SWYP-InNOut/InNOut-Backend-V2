@@ -48,8 +48,13 @@ jobs:
           port: ${{ secrets.WAS_PORT }}
           key: ${{ secrets.WAS_KEY }}
           script: |
+            cd /home/ubuntu/
+            
             sudo touch .env
-            echo "${{ secrets.ENV_VARS }}" | sudo tee .env > /dev/null
+            echo "${{ secrets.ENV_VARS }}" | sudo tee .env > .env
+            
+            sudo touch docker-compose.yaml
+            echo "${{ vars.DOCKER_COMPOSE }}" | sudo tee docker-compose.yaml > docker-compose.yaml
             
             sudo docker ps
             sudo docker rm -f $(sudo docker ps -qa)
