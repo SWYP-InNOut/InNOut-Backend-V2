@@ -1,7 +1,7 @@
 services:
   web:
     container_name: inandout-container
-    image: inandout/inandout-web:latest
+    image: ${{ secrets.DOCKER_HUB_USERNAME }}/${{ secrets.DOCKER_HUB_REPO_NAME }}:latest
     env_file:
       - .env
     expose:
