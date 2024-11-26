@@ -50,6 +50,12 @@ jobs:
           script: |
             cd /home/ubuntu/
             
+            sudo chown ubuntu:ubuntu .env
+            sudo chmod 644 .env
+            
+            sudo chown ubuntu:ubuntu docker-compose.yml
+            sudo chmod 644 docker-compose.yml
+            
             sudo touch .env
             sudo echo "${{ secrets.ENV_VARS }}" | sudo tee .env > .env
             
