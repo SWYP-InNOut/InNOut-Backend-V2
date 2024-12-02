@@ -1,7 +1,10 @@
 package com.example.inandout.global.auth.filter;
 
 import com.example.inandout.api.dto.auth.request.LoginRequestDto;
+import com.example.inandout.global.auth.domain.PrincipalDetails;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -23,7 +26,7 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
     // "/login"으로 요청이 오면 실행되는 함수
     @Override
     public Authentication attemptAuthentication(HttpServletRequest request, HttpServletResponse response) throws AuthenticationException {
-        log.info("LoginFilter");
+        log.info("로그인: LoginFilter.attemptAuthentication");
 
         ObjectMapper objectMapper = new ObjectMapper();
         try {
@@ -34,13 +37,26 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
             UsernamePasswordAuthenticationToken authenticationToken
                     = new UsernamePasswordAuthenticationToken(loginRequestDto.getEmail(), loginRequestDto.getPassword());
 
-            log.info(authenticationToken.getPrincipal().toString());
-            log.info(authenticationToken.getCredentials().toString());
-
+            // 로그인 인증
+            return authenticationManager.authenticate(authenticationToken);
         } catch (IOException e) {
             e.printStackTrace();
         }
 
-        return super.attemptAuthentication(request, response);
+        return null;
+    }
+
+    @Override
+    protected void successfulAuthentication(HttpServletRequest request, HttpServletResponse response, FilterChain chain, Authentication authentication) throws IOException, ServletException {
+        log.info("로그인 성공: LoginFilter.successfulAuthentication");
+
+        // 로그인 성공
+        PrincipalDetails principalDetails = (PrincipalDetails) authentication.getPrincipal();
+        log.info("=============================================");
+        log.info("email: " + principalDetails.getUsername());
+        log.info("password: " + principalDetails.getPassword());
+        log.info("=============================================");
+
+        super.successfulAuthentication(request, response, chain, authentication);
     }
 }
