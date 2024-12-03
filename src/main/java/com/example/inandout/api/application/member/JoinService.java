@@ -29,21 +29,12 @@ public class JoinService {
     public int join(JoinRequestDto joinRequestDto) {
         Optional<Member> member = memberRepository.findByLoginTypeAndEmail(LoginType.GENERAL, joinRequestDto.getEmail());
 
-        // 토큰 생성
-        String authToken = UUID.randomUUID().toString();
-
-        // 프로필 이미지 랜덤 생성
         int memberImageId = (int) ((Math.random()*6)+1);
 
         // 존재하는 회원이 없음
         if (member.isEmpty()) {
-            // 회원을 아예 새로 만들기
             validateDuplicateUsername(joinRequestDto.getUsername());
-
-            Member newMember =
-                    Member.createGeneralMember(joinRequestDto.getUsername(), joinRequestDto.getEmail(), bCryptPasswordEncoder.encode(joinRequestDto.getPassword()), memberImageId, authToken);
-
-            memberRepository.save(newMember);
+            saveMember(joinRequestDto, memberImageId);
 
             // TODO: 이메일
             log.info("email 전송");
@@ -52,19 +43,31 @@ public class JoinService {
         }
 
         // 존재하는 회원이 있음
-        // ACTIVE, INACTIVE 회원인지 확인
-        validateGeneralActiveMember(member.get());
+        validateGeneralActiveMember(member.get()); // ACTIVE, INACTIVE 회원인지 확인
+        validateExpiredToken(member.get()); // 토큰이 만료되지 않았는지 확인
 
-        // 토큰이 만료되지 않았는지 확인
-        validateNotExpiredToken(member.get());
-
-        // 토큰 만료됨 -> 재발급하고 이메일 다시 보냄
-        member.get().updateToken(authToken);
-
-        // TODO: 이메일
-        log.info("email 전송");
+        updateTokenAndSendEmail(member.get());
 
         return memberImageId;
+    }
+
+    private void validateDuplicateUsername(String username) {
+        boolean isExistName = memberRepository.existsByName(username);
+        if (isExistName) {
+            log.error(DUPLICATED_NICKNAME.getMessage());
+            throw new MemberException(DUPLICATED_NICKNAME);
+        }
+    }
+
+    private void saveMember(JoinRequestDto joinRequestDto, int memberImageId) {
+        String authToken = UUID.randomUUID().toString();
+        Member member = Member.createGeneralMember(joinRequestDto.getUsername(),
+                joinRequestDto.getEmail(),
+                bCryptPasswordEncoder.encode(joinRequestDto.getPassword()),
+                memberImageId,
+                authToken);
+
+        memberRepository.save(member);
     }
 
     private void validateGeneralActiveMember(Member member) {
@@ -74,7 +77,7 @@ public class JoinService {
         }
     }
 
-    private void validateNotExpiredToken(Member member) {
+    private void validateExpiredToken(Member member) {
         if (!isExpired(member)) {
             log.error(DUPLICATED_EMAIL.getMessage());
             throw new MemberException(DUPLICATED_EMAIL);  // 존재하는 회원이 있음 + 토큰 만료 x
@@ -97,11 +100,11 @@ public class JoinService {
         return false;
     }
 
-    public void validateDuplicateUsername(String username) {
-        boolean isExistName = memberRepository.existsByName(username);
-        if (isExistName) {
-            log.error(DUPLICATED_NICKNAME.getMessage());
-            throw new MemberException(DUPLICATED_NICKNAME);
-        }
+    private void updateTokenAndSendEmail(Member member) {
+        String authToken = UUID.randomUUID().toString();
+        member.updateToken(authToken); // 토큰 만료됨 -> 재발급하고 이메일 다시 보냄
+
+        // TODO: 이메일
+        log.info("email 전송");
     }
 }
