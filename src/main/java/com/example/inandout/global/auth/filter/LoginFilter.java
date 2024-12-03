@@ -67,28 +67,32 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
         log.info("=============================================");
 
         Optional<Member> member = memberRepository.findByEmail(principalDetails.getUsername());
-
         if (member.isEmpty()) {
             response.setStatus(401);
             return;
         }
 
-        responseToken(response, member.get());
+        setResponse(response, member.get());
 
         // TODO: redis에 refreshToken, memberId 저장
-
     }
 
-    private void responseToken(HttpServletResponse response, Member member) throws IOException {
+    private void setResponse(HttpServletResponse response, Member member) throws IOException {
+        setTokenInResponseHeaders(response, member);
+        setResponseBody(response, member);
+    }
+
+    private void setTokenInResponseHeaders(HttpServletResponse response, Member member) {
         TokenInfo tokenInfo = jwtUtil.generateToken(member.getId());
 
         // 응답의 콘텐츠 타입을 JSON으로 설정
         response.setContentType("application/json");
         response.setCharacterEncoding("utf-8");
-
         response.addHeader("Authorization", tokenInfo.getGrantType() + " " + tokenInfo.getAccessToken());
         response.setHeader(HttpHeaders.SET_COOKIE, "refreshToken=" + tokenInfo.getRefreshToken() + "; Path=/; HttpOnly; Secure; Max-Age=" + refreshTokenValidTime + "; SameSite=None");
+    }
 
+    private void setResponseBody(HttpServletResponse response, Member member) throws IOException {
         // JSON 응답 작성
         LoginResponseDto loginResponseDto = new LoginResponseDto(member.getId(), member.getName(), member.getMemberImageId());
         PrintWriter writer = response.getWriter();
