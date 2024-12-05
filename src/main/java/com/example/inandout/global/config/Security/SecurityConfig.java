@@ -1,6 +1,7 @@
 package com.example.inandout.global.config.Security;
 
 import com.example.inandout.api.domain.member.repository.MemberRepository;
+import com.example.inandout.global.auth.filter.JWTFilter;
 import com.example.inandout.global.auth.filter.LoginFilter;
 import com.example.inandout.global.auth.util.JWTUtil;
 import lombok.RequiredArgsConstructor;
@@ -45,8 +46,11 @@ public class SecurityConfig {
         http.sessionManagement((session) -> session
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS));  // 세션을 STATELESS 상태로 설정
 
+        // 필터 등록
         http.addFilterAt(new LoginFilter(memberRepository, jwtUtil, authenticationManager(authenticationConfiguration)),
                 UsernamePasswordAuthenticationFilter.class);
+
+        http.addFilterBefore(new JWTFilter(memberRepository, jwtUtil), LoginFilter.class);
 
         // 경로별 인가 작업
         http.authorizeHttpRequests((auth) -> auth
