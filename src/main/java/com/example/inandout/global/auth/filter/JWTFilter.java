@@ -55,7 +55,7 @@ public class JWTFilter extends OncePerRequestFilter {
             return;
         }
 
-        //토큰에서 email 획득
+        //토큰에서 memberId 획득
         Long memberId = jwtUtil.getMemberId(token);
 
         if (memberId != null) {

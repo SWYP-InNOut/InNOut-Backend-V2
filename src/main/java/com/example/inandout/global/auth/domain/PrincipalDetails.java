@@ -1,6 +1,7 @@
 package com.example.inandout.global.auth.domain;
 
 import com.example.inandout.api.domain.member.entity.Member;
+import com.example.inandout.api.domain.member.value.MemberStatus;
 import lombok.Data;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -24,5 +25,10 @@ public class PrincipalDetails implements UserDetails {
     @Override
     public String getUsername() {
         return member.getEmail();
+    }
+
+    @Override
+    public boolean isEnabled() {
+        return member.getStatus().equals(MemberStatus.ACTIVE);
     }
 }
