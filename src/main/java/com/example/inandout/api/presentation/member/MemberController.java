@@ -9,9 +9,8 @@ import com.example.inandout.global.common.response.BaseResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.view.RedirectView;
 
 @Slf4j
 @RestController
@@ -32,5 +31,16 @@ public class MemberController {
         int memberImageId = joinService.join(joinRequestDto);
         JoinResponseDto joinResponseDto = new JoinResponseDto("인증 메일을 전송했습니다.", memberImageId);
         return new BaseResponse<>(joinResponseDto);
+    }
+
+    @GetMapping("/auth/verify")
+    public Object verifyEmail(@RequestParam("token") String token) {
+        boolean isComplete = joinService.updateByVerifyToken(token);
+
+        if (isComplete) {
+            return new RedirectView("http://stuffinout.site/login");
+        } else {
+            return new RedirectView("http://stuffinout.site/error");    // 링크 만료 페이지로 이동
+        }
     }
 }

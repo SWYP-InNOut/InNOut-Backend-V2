@@ -87,4 +87,8 @@ public class Member extends BaseEntity {
     public void updateToken(String authToken) {
         this.authToken = authToken;
     }
+
+    public void updateStatus(MemberStatus memberStatus) {
+        this.status = memberStatus;
+    }
 }

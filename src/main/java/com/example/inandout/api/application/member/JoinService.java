@@ -5,6 +5,7 @@ import com.example.inandout.api.domain.member.repository.MemberRepository;
 import com.example.inandout.api.domain.member.value.LoginType;
 import com.example.inandout.api.domain.member.value.MemberStatus;
 import com.example.inandout.api.dto.auth.request.JoinRequestDto;
+import com.example.inandout.global.auth.util.EmailUtil;
 import com.example.inandout.global.common.error.exception.MemberException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -23,6 +24,7 @@ import static com.example.inandout.global.common.response.BaseResponseStatus.*;
 @RequiredArgsConstructor
 @Transactional
 public class JoinService {
+    private final EmailUtil emailUtil;
     private final MemberRepository memberRepository;
     private final BCryptPasswordEncoder bCryptPasswordEncoder;
 
@@ -34,10 +36,9 @@ public class JoinService {
         // 존재하는 회원이 없음
         if (member.isEmpty()) {
             validateDuplicateUsername(joinRequestDto.getUsername());
-            saveMember(joinRequestDto, memberImageId);
+            Member savedMember = saveMember(joinRequestDto, memberImageId);
 
-            // TODO: 이메일
-            log.info("email 전송");
+            emailUtil.sendEmail(savedMember);
 
             return memberImageId;
         }
@@ -59,7 +60,7 @@ public class JoinService {
         }
     }
 
-    private void saveMember(JoinRequestDto joinRequestDto, int memberImageId) {
+    private Member saveMember(JoinRequestDto joinRequestDto, int memberImageId) {
         String authToken = UUID.randomUUID().toString();
         Member member = Member.createGeneralMember(joinRequestDto.getUsername(),
                 joinRequestDto.getEmail(),
@@ -68,10 +69,11 @@ public class JoinService {
                 authToken);
 
         memberRepository.save(member);
+        return member;
     }
 
     private void validateGeneralActiveMember(Member member) {
-        if (memberRepository.existsByStatusAndId(MemberStatus.ACTIVE, member.getId())) {
+        if (!memberRepository.existsByStatusAndId(MemberStatus.NONCERTIFIED, member.getId())) {
             log.error(ACTIVE_MEMBER.getMessage());
             throw new MemberException(ACTIVE_MEMBER);
         }
@@ -79,7 +81,7 @@ public class JoinService {
 
     private void validateExpiredToken(Member member) {
         if (!isExpired(member)) {
-            log.error(DUPLICATED_EMAIL.getMessage());
+            log.error(DUPLICATED_EMAIL.getMessage()); // "이메일 인증을 진행해주세요."
             throw new MemberException(DUPLICATED_EMAIL);  // 존재하는 회원이 있음 + 토큰 만료 x
         }
     }
@@ -104,7 +106,18 @@ public class JoinService {
         String authToken = UUID.randomUUID().toString();
         member.updateToken(authToken); // 토큰 만료됨 -> 재발급하고 이메일 다시 보냄
 
-        // TODO: 이메일
-        log.info("email 전송");
+        emailUtil.sendEmail(member);
+    }
+
+    public boolean updateByVerifyToken(String token) {
+        Member member = memberRepository.findByAuthToken(token)
+                .orElseThrow(() -> new MemberException(MEMBER_NOT_FOUND));
+
+        if (!isExpired(member)) {
+            member.updateStatus(MemberStatus.ACTIVE);
+            return true;
+        } else {
+            return false;
+        }
     }
 }

@@ -21,7 +21,14 @@ spring:
     hibernate:
       ddl-auto: create
 
+  mail:
+    request-uri: ${MAIL_REQUEST_URI}
+
 jwt:
   secret: ${JWT_SECRET_KEY}
   access-expire: ${JWT_ACCESS_EXPIRE}
   refresh-expire: ${JWT_REFRESH_EXPIRE}
+
+mail:
+  username: ${GOOGLE_EMAIL}
+  password: ${GOOGLE_APP_PASSWORD}

@@ -52,6 +52,10 @@ dependencies {
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.springframework.security:spring-security-test'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+
+    //email-certification
+    implementation 'org.springframework.boot:spring-boot-starter-mail:3.0.5'
+    implementation 'com.sun.mail:jakarta.mail:2.0.1'
 }
 
 tasks.named('test') {

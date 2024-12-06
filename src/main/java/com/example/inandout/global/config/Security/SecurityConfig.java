@@ -57,6 +57,7 @@ public class SecurityConfig {
                 .requestMatchers("/login").permitAll() // 모든 권한 허용
                 .requestMatchers("/").permitAll()
                 .requestMatchers("/join").permitAll()
+                .requestMatchers("/auth/verify").permitAll()
                 .anyRequest().authenticated()); // 로그인 한 사용자만 접근 가능
 
         return http.build();
