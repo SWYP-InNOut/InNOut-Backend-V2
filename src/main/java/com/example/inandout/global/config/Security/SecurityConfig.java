@@ -58,6 +58,7 @@ public class SecurityConfig {
                 .requestMatchers("/").permitAll()
                 .requestMatchers("/join").permitAll()
                 .requestMatchers("/auth/verify").permitAll()
+                .requestMatchers("/find-password").permitAll()
                 .anyRequest().authenticated()); // 로그인 한 사용자만 접근 가능
 
         return http.build();

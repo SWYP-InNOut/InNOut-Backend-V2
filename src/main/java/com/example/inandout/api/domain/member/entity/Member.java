@@ -91,4 +91,8 @@ public class Member extends BaseEntity {
     public void updateStatus(MemberStatus memberStatus) {
         this.status = memberStatus;
     }
+
+    public void updatePassword(String password) {
+        this.password = password;
+    }
 }

@@ -1,7 +1,9 @@
 package com.example.inandout.api.presentation.member;
 
 import com.example.inandout.api.application.member.JoinService;
+import com.example.inandout.api.application.member.LoginService;
 import com.example.inandout.api.application.member.MemberSaveService;
+import com.example.inandout.api.dto.auth.request.FindPasswordDto;
 import com.example.inandout.api.dto.auth.request.JoinRequestDto;
 import com.example.inandout.api.dto.auth.response.JoinResponseDto;
 import com.example.inandout.api.dto.member.MemberNameDto;
@@ -18,9 +20,10 @@ import org.springframework.web.servlet.view.RedirectView;
 public class MemberController {
     private final MemberSaveService memberSaveService;
     private final JoinService joinService;
+    private final LoginService loginService;
 
     @PostMapping("/checkSave")
-    public void saveMember(@RequestBody MemberNameDto memberIdAndNameDto) {
+    public void saveMember(@RequestBody @Validated MemberNameDto memberIdAndNameDto) {
         log.info(memberIdAndNameDto.getName());
         memberSaveService.saveMember(memberIdAndNameDto);
     }
@@ -42,5 +45,11 @@ public class MemberController {
         } else {
             return new RedirectView("http://stuffinout.site/error");    // 링크 만료 페이지로 이동
         }
+    }
+
+    @PostMapping("/find-password")
+    public BaseResponse<String> findPassword(@RequestBody @Validated FindPasswordDto findPasswordDto) {
+        loginService.findPassword(findPasswordDto.getEmail());
+        return new BaseResponse<>("비밀번호 찾기가 완료되었습니다.");
     }
 }

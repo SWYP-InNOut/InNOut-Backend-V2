@@ -8,6 +8,7 @@ import com.example.inandout.api.dto.auth.response.LoginResponseDto;
 import com.example.inandout.global.auth.domain.PrincipalDetails;
 import com.example.inandout.global.auth.domain.TokenInfo;
 import com.example.inandout.global.auth.util.JWTUtil;
+import com.example.inandout.global.common.error.exception.MemberException;
 import com.example.inandout.global.common.response.BaseResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.FilterChain;
@@ -26,6 +27,8 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Optional;
+
+import static com.example.inandout.global.common.response.BaseResponseStatus.MEMBER_NOT_FOUND;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -67,13 +70,10 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
         log.info("password: " + principalDetails.getPassword());
         log.info("=============================================");
 
-        Optional<Member> member = memberRepository.findByLoginTypeAndEmail(LoginType.GENERAL, principalDetails.getUsername());
-        if (member.isEmpty()) {
-            response.setStatus(401);
-            return;
-        }
+        Member member = memberRepository.findByLoginTypeAndEmail(LoginType.GENERAL, principalDetails.getUsername())
+                .orElseThrow(() -> new MemberException(MEMBER_NOT_FOUND));
 
-        setResponse(response, member.get());
+        setResponse(response, member);
 
         // TODO: redis에 refreshToken, memberId 저장
     }
