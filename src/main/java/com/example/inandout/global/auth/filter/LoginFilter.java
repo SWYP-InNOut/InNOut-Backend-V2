@@ -2,6 +2,7 @@ package com.example.inandout.global.auth.filter;
 
 import com.example.inandout.api.domain.member.entity.Member;
 import com.example.inandout.api.domain.member.repository.MemberRepository;
+import com.example.inandout.api.domain.member.value.LoginType;
 import com.example.inandout.api.dto.auth.request.LoginRequestDto;
 import com.example.inandout.api.dto.auth.response.LoginResponseDto;
 import com.example.inandout.global.auth.domain.PrincipalDetails;
@@ -66,7 +67,7 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
         log.info("password: " + principalDetails.getPassword());
         log.info("=============================================");
 
-        Optional<Member> member = memberRepository.findByEmail(principalDetails.getUsername());
+        Optional<Member> member = memberRepository.findByLoginTypeAndEmail(LoginType.GENERAL, principalDetails.getUsername());
         if (member.isEmpty()) {
             response.setStatus(401);
             return;

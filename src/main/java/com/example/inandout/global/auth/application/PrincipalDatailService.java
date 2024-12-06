@@ -2,6 +2,7 @@ package com.example.inandout.global.auth.application;
 
 import com.example.inandout.api.domain.member.entity.Member;
 import com.example.inandout.api.domain.member.repository.MemberRepository;
+import com.example.inandout.api.domain.member.value.LoginType;
 import com.example.inandout.global.auth.domain.PrincipalDetails;
 import com.example.inandout.global.common.error.exception.MemberException;
 import lombok.RequiredArgsConstructor;
@@ -22,7 +23,8 @@ public class PrincipalDatailService implements UserDetailsService {
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
         log.info("PrincipalDatailService");
-        Member member = memberRepository.findByEmail(email).orElseThrow(() -> new MemberException(MEMBER_NOT_FOUND));
+        Member member = memberRepository.findByLoginTypeAndEmail(LoginType.GENERAL, email)
+                .orElseThrow(() -> new MemberException(MEMBER_NOT_FOUND));
         return new PrincipalDetails(member);
     }
 }
