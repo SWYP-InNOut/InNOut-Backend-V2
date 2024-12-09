@@ -4,7 +4,7 @@ import com.example.inandout.api.domain.member.entity.Member;
 import com.example.inandout.api.domain.member.repository.MemberRepository;
 import com.example.inandout.api.domain.member.value.MemberStatus;
 import com.example.inandout.global.auth.domain.PrincipalDetails;
-import com.example.inandout.global.auth.util.JWTUtil;
+import com.example.inandout.api.application.auth.JWTProviderService;
 import com.example.inandout.global.common.error.exception.MemberException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -25,7 +25,7 @@ import static com.example.inandout.global.common.response.BaseResponseStatus.MEM
 @RequiredArgsConstructor
 public class JWTFilter extends OncePerRequestFilter {
     private final MemberRepository memberRepository;
-    private final JWTUtil jwtUtil;
+    private final JWTProviderService jwtProviderService;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
@@ -47,7 +47,7 @@ public class JWTFilter extends OncePerRequestFilter {
         String token = authorization.split(" ")[1];
 
         //토큰 소멸 시간 검증
-        if (jwtUtil.isExpired(token)) {
+        if (jwtProviderService.isExpired(token)) {
             System.out.println("token expired");
             filterChain.doFilter(request, response);
 
@@ -56,7 +56,7 @@ public class JWTFilter extends OncePerRequestFilter {
         }
 
         //토큰에서 memberId 획득
-        Long memberId = jwtUtil.getMemberId(token);
+        Long memberId = jwtProviderService.getMemberId(token);
 
         if (memberId != null) {
             log.info(memberId.toString());

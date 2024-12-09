@@ -3,7 +3,7 @@ package com.example.inandout.global.config.Security;
 import com.example.inandout.api.domain.member.repository.MemberRepository;
 import com.example.inandout.global.auth.filter.JWTFilter;
 import com.example.inandout.global.auth.filter.LoginFilter;
-import com.example.inandout.global.auth.util.JWTUtil;
+import com.example.inandout.api.application.auth.JWTProviderService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -21,7 +21,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @RequiredArgsConstructor
 public class SecurityConfig {
     private final MemberRepository memberRepository;
-    private final JWTUtil jwtUtil;
+    private final JWTProviderService jwtProviderService;
     private final AuthenticationConfiguration authenticationConfiguration;
 
     // AuthenticationManager Bean 등록
@@ -47,10 +47,10 @@ public class SecurityConfig {
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS));  // 세션을 STATELESS 상태로 설정
 
         // 필터 등록
-        http.addFilterAt(new LoginFilter(memberRepository, jwtUtil, authenticationManager(authenticationConfiguration)),
+        http.addFilterAt(new LoginFilter(memberRepository, jwtProviderService, authenticationManager(authenticationConfiguration)),
                 UsernamePasswordAuthenticationFilter.class);
 
-        http.addFilterBefore(new JWTFilter(memberRepository, jwtUtil), LoginFilter.class);
+        http.addFilterBefore(new JWTFilter(memberRepository, jwtProviderService), LoginFilter.class);
 
         // 경로별 인가 작업
         http.authorizeHttpRequests((auth) -> auth

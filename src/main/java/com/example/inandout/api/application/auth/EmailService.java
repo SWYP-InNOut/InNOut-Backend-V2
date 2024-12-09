@@ -1,4 +1,4 @@
-package com.example.inandout.global.auth.util;
+package com.example.inandout.api.application.auth;
 
 import com.example.inandout.api.domain.member.entity.Member;
 import com.example.inandout.global.common.error.exception.MemberException;
@@ -18,7 +18,7 @@ import static com.example.inandout.global.common.response.BaseResponseStatus.FAI
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class EmailUtil {
+public class EmailService {
     @Value("${mail.username}")
     private String email;
     @Value("${spring.mail.request-uri}")
