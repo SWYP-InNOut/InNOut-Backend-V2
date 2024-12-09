@@ -5,7 +5,7 @@ import com.example.inandout.api.domain.member.repository.MemberRepository;
 import com.example.inandout.api.domain.member.value.LoginType;
 import com.example.inandout.api.domain.member.value.MemberStatus;
 import com.example.inandout.api.dto.auth.request.JoinRequestDto;
-import com.example.inandout.global.auth.util.EmailUtil;
+import com.example.inandout.api.application.auth.EmailService;
 import com.example.inandout.global.common.error.exception.MemberException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -24,7 +24,7 @@ import static com.example.inandout.global.common.response.BaseResponseStatus.*;
 @RequiredArgsConstructor
 @Transactional
 public class JoinService {
-    private final EmailUtil emailUtil;
+    private final EmailService emailService;
     private final MemberRepository memberRepository;
     private final BCryptPasswordEncoder bCryptPasswordEncoder;
 
@@ -38,7 +38,7 @@ public class JoinService {
             validateDuplicateUsername(joinRequestDto.getUsername());
             Member savedMember = saveMember(joinRequestDto, memberImageId);
 
-            emailUtil.sendEmail(savedMember);
+            emailService.sendEmail(savedMember);
 
             return memberImageId;
         }
@@ -106,7 +106,7 @@ public class JoinService {
         String authToken = UUID.randomUUID().toString();
         member.updateToken(authToken); // 토큰 만료됨 -> 재발급하고 이메일 다시 보냄
 
-        emailUtil.sendEmail(member);
+        emailService.sendEmail(member);
     }
 
     public boolean updateByVerifyToken(String token) {

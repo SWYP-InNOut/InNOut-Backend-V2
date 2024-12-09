@@ -1,5 +1,6 @@
 package com.example.inandout.global.auth.filter;
 
+import com.example.inandout.api.application.auth.JWTProviderService;
 import com.example.inandout.api.domain.member.entity.Member;
 import com.example.inandout.api.domain.member.repository.MemberRepository;
 import com.example.inandout.api.domain.member.value.LoginType;
@@ -7,7 +8,6 @@ import com.example.inandout.api.dto.auth.request.LoginRequestDto;
 import com.example.inandout.api.dto.auth.response.LoginResponseDto;
 import com.example.inandout.global.auth.domain.PrincipalDetails;
 import com.example.inandout.global.auth.domain.TokenInfo;
-import com.example.inandout.global.auth.util.JWTUtil;
 import com.example.inandout.global.common.error.exception.MemberException;
 import com.example.inandout.global.common.response.BaseResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -26,7 +26,6 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.Optional;
 
 import static com.example.inandout.global.common.response.BaseResponseStatus.MEMBER_NOT_FOUND;
 
@@ -34,8 +33,9 @@ import static com.example.inandout.global.common.response.BaseResponseStatus.MEM
 @RequiredArgsConstructor
 public class LoginFilter extends UsernamePasswordAuthenticationFilter {
     private final MemberRepository memberRepository;
-    private final JWTUtil jwtUtil;
+    private final JWTProviderService jwtProviderService;
     private final AuthenticationManager authenticationManager;
+
     private final Long refreshTokenValidTime = (60 * 1000L) * 60 * 24 * 7; // 7일
 
     // "/login"으로 요청이 오면 실행되는 함수
@@ -73,19 +73,17 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
         Member member = memberRepository.findByLoginTypeAndEmail(LoginType.GENERAL, principalDetails.getUsername())
                 .orElseThrow(() -> new MemberException(MEMBER_NOT_FOUND));
 
-        setResponse(response, member);
+        TokenInfo tokenInfo = jwtProviderService.generateToken(member.getId());
 
-        // TODO: redis에 refreshToken, memberId 저장
+        setResponse(response, member, tokenInfo);
     }
 
-    private void setResponse(HttpServletResponse response, Member member) throws IOException {
-        setTokenInResponseHeaders(response, member);
+    private void setResponse(HttpServletResponse response, Member member, TokenInfo tokenInfo) throws IOException {
+        setTokenInResponseHeaders(response, tokenInfo);
         setResponseBody(response, member);
     }
 
-    private void setTokenInResponseHeaders(HttpServletResponse response, Member member) {
-        TokenInfo tokenInfo = jwtUtil.generateToken(member.getId());
-
+    private void setTokenInResponseHeaders(HttpServletResponse response, TokenInfo tokenInfo) {
         // 응답의 콘텐츠 타입을 JSON으로 설정
         response.setContentType("application/json");
         response.setCharacterEncoding("utf-8");
