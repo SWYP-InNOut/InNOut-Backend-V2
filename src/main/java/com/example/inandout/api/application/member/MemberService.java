@@ -19,7 +19,7 @@ import static com.example.inandout.global.common.response.BaseResponseStatus.MEM
 @Service
 @RequiredArgsConstructor
 @Transactional
-public class LoginService {
+public class MemberService {
     private final MemberRepository memberRepository;
     private final PasswordEncoder passwordEncoder;
     private final EmailService emailService;
