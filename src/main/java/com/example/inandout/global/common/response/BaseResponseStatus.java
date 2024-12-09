@@ -21,7 +21,9 @@ public enum BaseResponseStatus implements ResponseStatus {
     /**
      * 6000: 인증 오류
      */
-    FAILED_SEND_EMAIL(4016, HttpStatus.BAD_REQUEST.value(), "인증 메일 전송에 실패하였습니다.");
+    FAILED_SEND_EMAIL(4016, HttpStatus.BAD_REQUEST.value(), "인증 메일 전송에 실패하였습니다."),
+    EXPIRED_REFRESHTOKEN(4014, HttpStatus.UNAUTHORIZED.value(), "RefreshToken 유효 기간이 만료되었습니다."),
+    NOT_FOUND_REFRESHTOKEN(4015, HttpStatus.UNAUTHORIZED.value(), "존재하지 않는 RefreshToken입니다.");
 
     private final int code;
     private final int status;

@@ -1,11 +1,10 @@
 package com.example.inandout.api.application.auth;
 
-import com.example.inandout.api.infrastructure.redis.RefreshTokenRedisRepository;
+import com.example.inandout.api.infrastructure.redis.ValueRedisRepository;
 import com.example.inandout.global.auth.domain.TokenInfo;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
-import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -13,12 +12,12 @@ import org.springframework.stereotype.Component;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
-import java.sql.Date;
+import java.util.Date;
 
 @Component
 public class JWTProviderService {
     @Autowired
-    private RefreshTokenRedisRepository redisRepository;
+    private ValueRedisRepository redisRepository;
     private SecretKey secretKey;
     private final Long ACCESSTOKEN_VALIDTIME = (60 * 1000L) * 30; // 30분
     private final Long REFRESHTOKEN_VALIDTIME = (60 * 1000L) * 60 * 24 * 7; // 7일
@@ -31,7 +30,7 @@ public class JWTProviderService {
         String accessToken = createAccessToken(memberId, ACCESSTOKEN_VALIDTIME);
         String refreshToken = createRefreshToken(REFRESHTOKEN_VALIDTIME);
 
-        redisRepository.setValues(refreshToken, memberId);
+        redisRepository.saveValueWithExpiry(refreshToken, String.valueOf(memberId), REFRESHTOKEN_VALIDTIME);
 
         return TokenInfo.builder()
                 .grantType("Bearer")

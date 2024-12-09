@@ -1,18 +1,27 @@
 package com.example.inandout.api.presentation.member;
 
+import com.example.inandout.api.application.auth.AuthService;
 import com.example.inandout.api.application.member.JoinService;
-import com.example.inandout.api.application.member.LoginService;
+import com.example.inandout.api.application.member.MemberService;
 import com.example.inandout.api.application.member.MemberSaveService;
 import com.example.inandout.api.dto.auth.request.FindPasswordDto;
 import com.example.inandout.api.dto.auth.request.JoinRequestDto;
 import com.example.inandout.api.dto.auth.response.JoinResponseDto;
 import com.example.inandout.api.dto.member.MemberNameDto;
+import com.example.inandout.global.auth.domain.TokenInfo;
 import com.example.inandout.global.common.response.BaseResponse;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpHeaders;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.view.RedirectView;
+import org.springframework.web.util.WebUtils;
+
+import java.util.Objects;
 
 @Slf4j
 @RestController
@@ -20,7 +29,9 @@ import org.springframework.web.servlet.view.RedirectView;
 public class MemberController {
     private final MemberSaveService memberSaveService;
     private final JoinService joinService;
-    private final LoginService loginService;
+    private final MemberService memberService;
+    private final AuthService authService;
+    private final Long refreshTokenValidTime = (60 * 1000L) * 60 * 24 * 7; // 7일
 
     @PostMapping("/checkSave")
     public void saveMember(@RequestBody @Validated MemberNameDto memberIdAndNameDto) {
@@ -49,7 +60,22 @@ public class MemberController {
 
     @PostMapping("/find-password")
     public BaseResponse<String> findPassword(@RequestBody @Validated FindPasswordDto findPasswordDto) {
-        loginService.findPassword(findPasswordDto.getEmail());
+        memberService.findPassword(findPasswordDto.getEmail());
         return new BaseResponse<>("비밀번호 찾기가 완료되었습니다.");
+    }
+
+    @GetMapping("/regenerate-token")
+    public BaseResponse<String> reissue(HttpServletRequest request, HttpServletResponse response) {
+        Cookie refreshToken = WebUtils.getCookie(request, "refreshToken");
+        TokenInfo tokenInfo = authService.reissue(Objects.requireNonNull(refreshToken).getValue());
+        response.addHeader("Authorization", tokenInfo.getGrantType() + " " + tokenInfo.getAccessToken());
+        response.setHeader(HttpHeaders.SET_COOKIE,
+                "refreshToken="
+                        + tokenInfo.getRefreshToken()
+                        + "; Path=/; HttpOnly; Secure; Max-Age="
+                        + refreshTokenValidTime
+                        + "; SameSite=None");
+
+        return new BaseResponse<>("토큰 발급이 완료되었습니다.");
     }
 }
