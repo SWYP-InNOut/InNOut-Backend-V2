@@ -31,4 +31,8 @@ public class PrincipalDetails implements UserDetails {
     public boolean isEnabled() {
         return member.getStatus().equals(MemberStatus.ACTIVE);
     }
+
+    public Long getMemberId() {
+        return member.getId();
+    }
 }
