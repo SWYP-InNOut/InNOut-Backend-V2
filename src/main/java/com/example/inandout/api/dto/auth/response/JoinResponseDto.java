@@ -6,6 +6,6 @@ import lombok.Getter;
 @Getter
 @AllArgsConstructor
 public class JoinResponseDto {
-    private String result;
+    private static final String result = "인증 메일을 전송했습니다.";
     private Integer memberImageId;
 }

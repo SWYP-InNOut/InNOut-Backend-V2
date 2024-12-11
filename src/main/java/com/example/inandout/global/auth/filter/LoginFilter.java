@@ -32,17 +32,23 @@ import static com.example.inandout.global.common.response.BaseResponseStatus.MEM
 @Slf4j
 @RequiredArgsConstructor
 public class LoginFilter extends UsernamePasswordAuthenticationFilter {
+    private static final String CONTENTTYPE = "application/json";
+    private static final String CHARACTOR_ENCODING = "utf-8";
+    private static final String HEADER_AUTHORIZATION = "Authorization";
+    private static final String BLANK = " ";
+    private static final String COOKIE_REFRESHTOKEN = "refreshToken=";
+    private static final String COOKIE_FLAGS = "; Path=/; HttpOnly; Secure; ";
+    private static final String COOKIE_MAXAGE = "Max-Age=";
+    private static final String COOKIE_SAMESITE = "; SameSite=None";
+    private static final Long refreshTokenValidTime = (60 * 1000L) * 60 * 24 * 7; // 7일
+
     private final MemberRepository memberRepository;
     private final JWTProviderService jwtProviderService;
     private final AuthenticationManager authenticationManager;
 
-    private final Long refreshTokenValidTime = (60 * 1000L) * 60 * 24 * 7; // 7일
-
     // "/login"으로 요청이 오면 실행되는 함수
     @Override
     public Authentication attemptAuthentication(HttpServletRequest request, HttpServletResponse response) throws AuthenticationException {
-        log.info("로그인: LoginFilter.attemptAuthentication");
-
         ObjectMapper objectMapper = new ObjectMapper();
         try {
             // email, password 받기
@@ -64,11 +70,6 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
     @Override
     protected void successfulAuthentication(HttpServletRequest request, HttpServletResponse response, FilterChain chain, Authentication authentication) throws IOException, ServletException {
         PrincipalDetails principalDetails = (PrincipalDetails) authentication.getPrincipal();
-        log.info("=============================================");
-        log.info("로그인 성공: LoginFilter.successfulAuthentication");
-        log.info("email: " + principalDetails.getUsername());
-        log.info("password: " + principalDetails.getPassword());
-        log.info("=============================================");
 
         Member member = memberRepository.findByLoginTypeAndEmail(LoginType.GENERAL, principalDetails.getUsername())
                 .orElseThrow(() -> new MemberException(MEMBER_NOT_FOUND));
@@ -85,10 +86,16 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
 
     private void setTokenInResponseHeaders(HttpServletResponse response, TokenInfo tokenInfo) {
         // 응답의 콘텐츠 타입을 JSON으로 설정
-        response.setContentType("application/json");
-        response.setCharacterEncoding("utf-8");
-        response.addHeader("Authorization", tokenInfo.getGrantType() + " " + tokenInfo.getAccessToken());
-        response.setHeader(HttpHeaders.SET_COOKIE, "refreshToken=" + tokenInfo.getRefreshToken() + "; Path=/; HttpOnly; Secure; Max-Age=" + refreshTokenValidTime + "; SameSite=None");
+        response.setContentType(CONTENTTYPE);
+        response.setCharacterEncoding(CHARACTOR_ENCODING);
+        response.addHeader(HEADER_AUTHORIZATION, tokenInfo.getGrantType() + BLANK + tokenInfo.getAccessToken());
+        response.setHeader(HttpHeaders.SET_COOKIE,
+                COOKIE_REFRESHTOKEN
+                        + tokenInfo.getRefreshToken()
+                        + COOKIE_FLAGS
+                        + COOKIE_MAXAGE
+                        + refreshTokenValidTime
+                        + COOKIE_SAMESITE);
     }
 
     private void setResponseBody(HttpServletResponse response, Member member) throws IOException {
@@ -105,7 +112,7 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
     @Override
     protected void unsuccessfulAuthentication(HttpServletRequest request, HttpServletResponse response, AuthenticationException failed) throws IOException, ServletException {
         //로그인 실패시 401 응답 코드 반환
-        System.out.println("unsuccessfulAuthentication: " + failed.getMessage());
+        log.info("unsuccessfulAuthentication: " + failed.getMessage());
         response.setStatus(401);
     }
 }

@@ -27,23 +27,30 @@ import java.util.Objects;
 @RestController
 @RequiredArgsConstructor
 public class MemberController {
+    private static final String HEADER_AUTHORIZATION = "Authorization";
+    private static final String BLANK = " ";
+    private static final String COOKIE_REFRESHTOKEN = "refreshToken=";
+    private static final String COOKIE_FLAGS = "; Path=/; HttpOnly; Secure; ";
+    private static final String COOKIE_MAXAGE = "Max-Age=";
+    private static final String COOKIE_SAMESITE = "; SameSite=None";
+    private static final String LOGIN_URL = "http://stuffinout.site/login";
+    private static final String ERROR_URL = "http://stuffinout.site/error";
+    private static final Long refreshTokenValidTime = (60 * 1000L) * 60 * 24 * 7;
+
     private final MemberSaveService memberSaveService;
     private final JoinService joinService;
     private final MemberService memberService;
     private final AuthService authService;
-    private final Long refreshTokenValidTime = (60 * 1000L) * 60 * 24 * 7; // 7일
 
     @PostMapping("/checkSave")
     public void saveMember(@RequestBody @Validated MemberNameDto memberIdAndNameDto) {
-        log.info(memberIdAndNameDto.getName());
         memberSaveService.saveMember(memberIdAndNameDto);
     }
 
     @PostMapping("/join")
     public BaseResponse<JoinResponseDto> join(@RequestBody @Validated JoinRequestDto joinRequestDto) {
-        log.info("MemberController.join");
         int memberImageId = joinService.join(joinRequestDto);
-        JoinResponseDto joinResponseDto = new JoinResponseDto("인증 메일을 전송했습니다.", memberImageId);
+        JoinResponseDto joinResponseDto = new JoinResponseDto(memberImageId);
         return new BaseResponse<>(joinResponseDto);
     }
 
@@ -52,9 +59,9 @@ public class MemberController {
         boolean isComplete = joinService.updateByVerifyToken(token);
 
         if (isComplete) {
-            return new RedirectView("http://stuffinout.site/login");
+            return new RedirectView(LOGIN_URL);
         } else {
-            return new RedirectView("http://stuffinout.site/error");    // 링크 만료 페이지로 이동
+            return new RedirectView(ERROR_URL);    // 링크 만료 페이지로 이동
         }
     }
 
@@ -66,15 +73,15 @@ public class MemberController {
 
     @GetMapping("/regenerate-token")
     public BaseResponse<String> reissue(HttpServletRequest request, HttpServletResponse response) {
-        Cookie refreshToken = WebUtils.getCookie(request, "refreshToken");
-        TokenInfo tokenInfo = authService.reissue(Objects.requireNonNull(refreshToken).getValue());
-        response.addHeader("Authorization", tokenInfo.getGrantType() + " " + tokenInfo.getAccessToken());
+        TokenInfo tokenInfo = authService.reissue(request);
+        response.addHeader(HEADER_AUTHORIZATION, tokenInfo.getGrantType() + BLANK + tokenInfo.getAccessToken());
         response.setHeader(HttpHeaders.SET_COOKIE,
-                "refreshToken="
+                COOKIE_REFRESHTOKEN
                         + tokenInfo.getRefreshToken()
-                        + "; Path=/; HttpOnly; Secure; Max-Age="
+                        + COOKIE_FLAGS
+                        + COOKIE_MAXAGE
                         + refreshTokenValidTime
-                        + "; SameSite=None");
+                        + COOKIE_SAMESITE);
 
         return new BaseResponse<>("토큰 발급이 완료되었습니다.");
     }

@@ -20,6 +20,7 @@ import static com.example.inandout.global.common.response.BaseResponseStatus.MEM
 @RequiredArgsConstructor
 @Transactional
 public class MemberService {
+    private static final int PASSWORD_LENGTH = 10;
     private final MemberRepository memberRepository;
     private final PasswordEncoder passwordEncoder;
     private final EmailService emailService;
@@ -28,7 +29,7 @@ public class MemberService {
         Member member = validateGeneralMember(email);
 
         // 임시 비밀번호 만들기
-        String newPwd = RandomStringUtils.randomAlphanumeric(10);
+        String newPwd = RandomStringUtils.randomAlphanumeric(PASSWORD_LENGTH);
         member.updatePassword(passwordEncoder.encode(newPwd));
         emailService.sendPasswordEmail(email, newPwd);
     }

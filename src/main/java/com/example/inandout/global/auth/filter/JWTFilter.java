@@ -24,19 +24,20 @@ import static com.example.inandout.global.common.response.BaseResponseStatus.MEM
 @Slf4j
 @RequiredArgsConstructor
 public class JWTFilter extends OncePerRequestFilter {
+    private static final String AUTHORIZATION = "Authorization";
+    private static final String AUTHORIZATION_PREFIX = "Bearer ";
+    private static final String SPLIT_REGEX = " ";
+
     private final MemberRepository memberRepository;
     private final JWTProviderService jwtProviderService;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
-        log.info("CHECK JWT: JWTFilter.doFilterInternal");
-
         //request에서 Authorization 헤더를 찾음
-        String authorization= request.getHeader("Authorization");
+        String authorization= request.getHeader(AUTHORIZATION);
 
         //Authorization 헤더 검증
-        if (authorization == null || !authorization.startsWith("Bearer ")) {
-            System.out.println("token null");
+        if (authorization == null || !authorization.startsWith(AUTHORIZATION_PREFIX)) {
             filterChain.doFilter(request, response);
 
             //조건이 해당되면 메소드 종료 (필수)
@@ -44,11 +45,10 @@ public class JWTFilter extends OncePerRequestFilter {
         }
 
         //Bearer 부분 제거 후 순수 토큰만 획득
-        String token = authorization.split(" ")[1];
+        String token = authorization.split(SPLIT_REGEX)[1];
 
         //토큰 소멸 시간 검증
         if (jwtProviderService.isExpired(token)) {
-            System.out.println("token expired");
             filterChain.doFilter(request, response);
 
             //조건이 해당되면 메소드 종료 (필수)

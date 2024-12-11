@@ -6,19 +6,28 @@ import com.example.inandout.api.infrastructure.redis.ValueRedisRepository;
 import com.example.inandout.global.auth.domain.TokenInfo;
 import com.example.inandout.global.common.error.exception.MemberException;
 import io.jsonwebtoken.ExpiredJwtException;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.web.util.WebUtils;
+
+import java.util.Objects;
 
 import static com.example.inandout.global.common.response.BaseResponseStatus.*;
 
 @Service
 @RequiredArgsConstructor
 public class AuthService {
+    private static final String COOKIE_REFRESHTOKEN = "refreshToken";
+
     private final JWTProviderService jwtProviderService;
     private final ValueRedisRepository redisRepository;
     private final MemberRepository memberRepository;
 
-    public TokenInfo reissue(String refreshToken) {
+    public TokenInfo reissue(HttpServletRequest request) {
+        Cookie cookie = WebUtils.getCookie(request, COOKIE_REFRESHTOKEN);
+        String refreshToken = Objects.requireNonNull(cookie).getValue();
         validateRefreshToken(refreshToken);
         Long memberId = getMemberIdFromRefreshToken(refreshToken);
         validateMember(memberId);

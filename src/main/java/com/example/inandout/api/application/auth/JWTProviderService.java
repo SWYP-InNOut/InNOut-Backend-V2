@@ -16,11 +16,15 @@ import java.util.Date;
 
 @Component
 public class JWTProviderService {
+    private static final Long ACCESSTOKEN_VALIDTIME = (60 * 1000L) * 30; // 30분
+    private static final Long REFRESHTOKEN_VALIDTIME = (60 * 1000L) * 60 * 24 * 7; // 7일
+    private static final String GRANTTYPE_BEARER = "Bearer";
+    private static final String ISEXPIRED = "isExpired: ";
+    private static final String SECRETKEY = "secretKey: ";
+
     @Autowired
     private ValueRedisRepository redisRepository;
     private SecretKey secretKey;
-    private final Long ACCESSTOKEN_VALIDTIME = (60 * 1000L) * 30; // 30분
-    private final Long REFRESHTOKEN_VALIDTIME = (60 * 1000L) * 60 * 24 * 7; // 7일
 
     public JWTProviderService(@Value("${jwt.secret}") String secret) {
         secretKey = new SecretKeySpec(secret.getBytes(StandardCharsets.UTF_8), Jwts.SIG.HS256.key().build().getAlgorithm());
@@ -33,7 +37,7 @@ public class JWTProviderService {
         redisRepository.saveValueWithExpiry(refreshToken, String.valueOf(memberId), REFRESHTOKEN_VALIDTIME);
 
         return TokenInfo.builder()
-                .grantType("Bearer")
+                .grantType(GRANTTYPE_BEARER)
                 .accessToken(accessToken)
                 .refreshToken(refreshToken)
                 .build();
@@ -58,8 +62,8 @@ public class JWTProviderService {
     }
 
     public Boolean isExpired(String token) throws ExpiredJwtException{
-        System.out.println("isExpired: "+token);
-        System.out.println("secretKey: "+secretKey);
+        System.out.println(ISEXPIRED + token);
+        System.out.println(SECRETKEY + secretKey);
         System.out.println(Jwts.parser().verifyWith(secretKey).build().parseSignedClaims(token).getPayload().getExpiration().before(new Date(System.currentTimeMillis())));
         return Jwts.parser()
                 .verifyWith(secretKey)

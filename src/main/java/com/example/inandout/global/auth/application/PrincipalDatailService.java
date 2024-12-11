@@ -22,7 +22,6 @@ public class PrincipalDatailService implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-        log.info("PrincipalDatailService");
         Member member = memberRepository.findByLoginTypeAndEmail(LoginType.GENERAL, email)
                 .orElseThrow(() -> new MemberException(MEMBER_NOT_FOUND));
         return new PrincipalDetails(member);

@@ -19,6 +19,12 @@ import static com.example.inandout.global.common.response.BaseResponseStatus.FAI
 @Component
 @RequiredArgsConstructor
 public class EmailService {
+    private static final String EMAIL_CERTIFICATION_SUBJECT = "In&Out 회원가입 이메일 인증";
+    private static final String FIND_PASSWORD_SUBJECT = "In&Out 비밀번호 찾기";
+    private static final String CHARSET = "utf-8";
+    private static final String SUBTYPE = "html";
+    private static final String SENDER = "inandout";
+
     @Value("${mail.username}")
     private String email;
     @Value("${spring.mail.request-uri}")
@@ -27,15 +33,14 @@ public class EmailService {
     private final JavaMailSender mailSender;
 
     public void sendEmail(Member member) {
-        log.info("이메일 인증");
         String receiverMail = member.getEmail();
         MimeMessage message = mailSender.createMimeMessage();
 
         try {
             message.addRecipients(MimeMessage.RecipientType.TO, receiverMail);// 보내는 대상
-            message.setSubject("In&Out 회원가입 이메일 인증");// 제목
-            message.setText(getEmailCertificationBody(member), "utf-8", "html"); // 내용, charset 타입, subtype
-            message.setFrom(new InternetAddress(email, "inandout")); // 보내는 사람의 이메일 주소, 보내는 사람 이름
+            message.setSubject(EMAIL_CERTIFICATION_SUBJECT);// 제목
+            message.setText(getEmailCertificationBody(member), CHARSET, SUBTYPE); // 내용, charset 타입, subtype
+            message.setFrom(new InternetAddress(email, SENDER)); // 보내는 사람의 이메일 주소, 보내는 사람 이름
             mailSender.send(message); // 메일 전송
         } catch (MessagingException | UnsupportedEncodingException e) {
             log.error(FAILED_SEND_EMAIL.getMessage());
@@ -102,15 +107,15 @@ public class EmailService {
 
         try {
             message.addRecipients(MimeMessage.RecipientType.TO, email);// 보내는 대상
-            message.setSubject("In&Out 비밀번호 찾기");// 제목
+            message.setSubject(FIND_PASSWORD_SUBJECT);// 제목
 
             log.info(email);
 
             String body = getFindPasswordBody(newPwd);
 
-            message.setText(body, "utf-8", "html");// 내용, charset 타입, subtype
+            message.setText(body, CHARSET, SUBTYPE);// 내용, charset 타입, subtype
             // 보내는 사람의 이메일 주소, 보내는 사람 이름
-            message.setFrom(new InternetAddress(email, "inandout"));// 보내는 사람
+            message.setFrom(new InternetAddress(email, SENDER));// 보내는 사람
             mailSender.send(message); // 메일 전송
         } catch (MessagingException | UnsupportedEncodingException e) {
             log.error(FAILED_SEND_EMAIL.getMessage());

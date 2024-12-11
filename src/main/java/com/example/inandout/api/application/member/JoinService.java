@@ -92,9 +92,6 @@ public class JoinService {
 //        LocalDateTime expirationDateTime = generatedTime.plusDays(1);
         LocalDateTime expirationDateTime = generatedTime.plusSeconds(60*10); // 유효기한 10분
 
-        log.info("expiration date time: {}", expirationDateTime);
-        log.info("requested time: {}", joinRequestTime);
-
         if (joinRequestTime.isAfter(expirationDateTime)) {
             return true;
         }
